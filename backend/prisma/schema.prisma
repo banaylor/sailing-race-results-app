@@ -1,0 +1,107 @@
+// Prisma Schema for Sailing Race Results Application
+// Based on simplified data model from requirements
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  firstName String   @map("first_name")
+  lastName  String   @map("last_name")
+  phone     String?
+  role      String   @default("sailor") // sailor, race_officer, club_admin
+  clubId    String?  @map("club_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  club        Club?        @relation(fields: [clubId], references: [id])
+  boats       Boat[]
+  racesCreated Race[]      @relation("RaceCreator")
+  raceEntries RaceEntry[]
+
+  @@map("users")
+}
+
+model Club {
+  id        String   @id @default(uuid())
+  name      String
+  location  String?
+  timezone  String   @default("UTC")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  users User[]
+  races Race[]
+
+  @@map("clubs")
+}
+
+model Boat {
+  id         String   @id @default(uuid())
+  ownerId    String   @map("owner_id")
+  name       String
+  sailNumber String?  @map("sail_number")
+  boatClass  String   @map("boat_class")
+  pyNumber   Decimal? @map("py_number") @db.Decimal(10, 4)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // Relations
+  owner       User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  raceEntries RaceEntry[]
+
+  @@index([ownerId])
+  @@index([boatClass])
+  @@map("boats")
+}
+
+model Race {
+  id        String   @id @default(uuid())
+  clubId    String   @map("club_id")
+  name      String
+  raceDate  DateTime @map("race_date") @db.Date
+  startTime DateTime @map("start_time") @db.Time
+  status    String   @default("scheduled") // scheduled, in_progress, completed, cancelled
+  createdBy String   @map("created_by")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  club        Club        @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  creator     User        @relation("RaceCreator", fields: [createdBy], references: [id])
+  raceEntries RaceEntry[]
+
+  @@index([clubId])
+  @@index([raceDate])
+  @@index([status])
+  @@map("races")
+}
+
+model RaceEntry {
+  id            String   @id @default(uuid())
+  raceId        String   @map("race_id")
+  userId        String   @map("user_id")
+  boatId        String   @map("boat_id")
+  status        String   @default("registered") // registered, dns, dnf, dsq, finished
+  finishTime    String?  @map("finish_time") // Stored as interval string
+  correctedTime String?  @map("corrected_time") // Stored as interval string
+  position      Int?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  // Relations
+  race Race @relation(fields: [raceId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  boat Boat @relation(fields: [boatId], references: [id], onDelete: Cascade)
+
+  @@unique([raceId, userId, boatId])
+  @@index([raceId])
+  @@index([userId])
+  @@map("race_entries")
+}
