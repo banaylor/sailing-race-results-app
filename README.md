@@ -38,7 +38,7 @@ A modern, cloud-native web application for managing sailing club races, boats, a
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/brian-naylor/sailing-race-results-app.git
+git clone https://github.com/banaylor/sailing-race-results-app.git
 cd sailing-race-results-app
 ```
 
@@ -214,7 +214,7 @@ This project is licensed under the MIT License.
 ## 👤 Author
 
 **Brian Naylor**
-- GitHub: [@brian-naylor](https://github.com/brian-naylor)
+- GitHub: [@banaylor](https://github.com/banaylor)
 
 ## 🙏 Acknowledgments
 
